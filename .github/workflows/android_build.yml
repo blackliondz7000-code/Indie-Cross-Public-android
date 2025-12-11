@@ -5,15 +5,13 @@ on:
 
 jobs:
   build-android:
-    # نستخدم بيئة قوية مجهزة مسبقاً لأندرويد
     runs-on: ubuntu-latest
     
-    # تحديد المتغيرات البيئية لـ Android NDK
+    # تحديد مسار NDK ليتمكن Haxe/Lime من العثور عليه
     env:
       ANDROID_NDK_VERSION: r21e
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-      # هذا المسار يستخدمه Lime للبناء
-      NDK_ROOT: /usr/local/lib/android/sdk/ndk-bundle
+      # إعداد متغيرات بيئة إضافية قد يحتاجها Lime
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk 
 
     steps:
     - name: 1. جلب الكود (Check out)
@@ -24,17 +22,17 @@ jobs:
     - name: 2. تهيئة Haxe 4.1.5 و Neko
       uses: krdlab/setup-haxe@v1
       with:
-        haxe-version: 4.1.5 # الإصدار المحدد
+        haxe-version: 4.1.5 
         neko-version: 2.3.0
         
     - name: 3. تثبيت مكتبات Haxelib
       run: |
-        # تثبيت Lime بالإصدار المحدد
+        # تثبيت المكتبات الأساسية
         haxelib install lime 7.9.0 
         haxelib install openfl
         haxelib install flixel
         haxelib run lime setup flixel
-        haxelib run lime setup # تهيئة Lime 
+        haxelib run lime setup 
         haxelib install flixel-tools
         haxelib install flixel-addons
         haxelib install flixel-ui
@@ -53,17 +51,19 @@ jobs:
         haxelib run lime update
 
     # ----------------------------------------------------
-    # التعديل الجديد: تثبيت Android SDK/NDK بالطريقة الموثوقة
-    - name: 4. تثبيت Android NDK/SDK (التهيئة الجديدة)
-      uses: r3dsm/android-ndk-build@v3
+    # الإصلاح الأخير: استخدام أداة تهيئة Android موثوقة
+    - name: 4. تثبيت Android NDK/SDK
+      uses: android-ndk/setup-android@v1
       with:
-          ndk-version: r21e # إصدار NDK معروف بالعمل مع HaxeFlixel
-
+          ndk-version: r21e
+          
     # ----------------------------------------------------
     # الخطوة 5: إعادة بناء الامتدادات وبدء البناء
     - name: 5. إعادة بناء الامتدادات والبناء النهائي
       run: |
+        # هذا الأمر ضروري لإعداد الامتداد للعمل مع Android
         haxelib run lime rebuild extension-webm android
+        # أمر البناء الفعلي
         lime build android -release
 
     # الخطوة 6: رفع ملف APK الجاهز
