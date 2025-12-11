@@ -91,20 +91,20 @@ jobs:
         echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
     # ----------------------------------------------------
-    # الخطوة 6: بناء ملف APK (تمت إضافة أوامر الربط هنا)
+    # الخطوة 6: بناء ملف APK (تم إضافة تحديد المعالج هنا)
     - name: 6. بناء Android Release APK
       run: |
-        # أولاً: إخبار Lime بمكان الأدوات التي ثبتناها (هذا هو الإصلاح)
+        # تهيئة الإعدادات
         haxelib run lime config ANDROID_SDK $ANDROID_SDK_ROOT
         haxelib run lime config ANDROID_NDK_ROOT $NDK_ROOT
         haxelib run lime config JAVA_HOME $JAVA_HOME
         haxelib run lime config ANDROID_SETUP true
         
-        # ثانياً: إعادة بناء الامتدادات
+        # إعادة بناء الامتدادات
         haxelib run lime rebuild extension-webm android 
         
-        # ثالثاً: البناء النهائي
-        haxelib run lime build android -release
+        # البناء النهائي مع تحديد معمارية المعالج (هذا هو الحل)
+        haxelib run lime build android -release -D HXCPP_ARM64
 
     # الخطوة 7: رفع ملف APK الجاهز
     - name: 7. Upload APK Artifact
@@ -113,4 +113,3 @@ jobs:
         name: FNF_IndieCross_Android_APK
         path: export/android/bin/release/app-release.apk 
         retention-days: 7
-
