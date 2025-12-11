@@ -5,7 +5,15 @@ on:
 
 jobs:
   build-android:
+    # نستخدم بيئة قوية مجهزة مسبقاً لأندرويد
     runs-on: ubuntu-latest
+    
+    # تحديد المتغيرات البيئية لـ Android NDK
+    env:
+      ANDROID_NDK_VERSION: r21e
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      # هذا المسار يستخدمه Lime للبناء
+      NDK_ROOT: /usr/local/lib/android/sdk/ndk-bundle
 
     steps:
     - name: 1. جلب الكود (Check out)
@@ -13,17 +21,13 @@ jobs:
       with:
         submodules: true
 
-    # ----------------------------------------------------
-    # التعديل 1: تثبيت إصدار Haxe و Neko المحدد
     - name: 2. تهيئة Haxe 4.1.5 و Neko
       uses: krdlab/setup-haxe@v1
       with:
-        haxe-version: 4.1.5 # تم التحديث إلى الإصدار المحدد
+        haxe-version: 4.1.5 # الإصدار المحدد
         neko-version: 2.3.0
         
-    # ----------------------------------------------------
-    # التعديل 2: تثبيت جميع المكتبات المحددة (بما في ذلك Git repos)
-    - name: 3. تثبيت مكتبات المشروع المحددة
+    - name: 3. تثبيت مكتبات Haxelib
       run: |
         # تثبيت Lime بالإصدار المحدد
         haxelib install lime 7.9.0 
@@ -39,42 +43,31 @@ jobs:
         haxelib install linc_luajit
         haxelib install actuate
 
-        # تثبيت المكتبات الخاصة من GitHub (haxelib git)
+        # تثبيت المكتبات الخاصة من GitHub
         haxelib git faxe https://github.com/uhrobots/faxe
         haxelib git polymod https://github.com/larsiusprime/polymod.git
         haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
         haxelib git extension-webm https://github.com/KadeDev/extension-webm
-
-        # إعادة بناء الامتدادات (مهمة لـ webm)
-        haxelib run lime rebuild extension-webm android
         
-        # تثبيت أي مكتبات أخرى محددة في ملف المشروع (Project.xml)
+        # تثبيت المكتبات الأخرى في ملف المشروع
         haxelib run lime update
 
     # ----------------------------------------------------
-    # التعديل 3: تهيئة بيئة Android
-    - name: 4. تهيئة بيئة Java و Android (Setup Android Tools)
-      uses: actions/setup-java@v4
+    # التعديل الجديد: تثبيت Android SDK/NDK بالطريقة الموثوقة
+    - name: 4. تثبيت Android NDK/SDK (التهيئة الجديدة)
+      uses: r3dsm/android-ndk-build@v3
       with:
-        distribution: 'temurin'
-        java-version: '17' 
-
-    - name: 5. تهيئة Android SDK/NDK
-      uses: nttld/setup-android@v3
-      with:
-        android-version: 34
-        # NDK 25 هو إصدار جيد للعمل مع HaxeFlixel
-        ndk-version: 25.1.8937393
+          ndk-version: r21e # إصدار NDK معروف بالعمل مع HaxeFlixel
 
     # ----------------------------------------------------
-    # الخطوة 6: بناء ملف APK
-    - name: 6. بناء Android Release APK
-      # الأمر الذي يقوم بعملية البناء والتوقيع للـ APK النهائي
+    # الخطوة 5: إعادة بناء الامتدادات وبدء البناء
+    - name: 5. إعادة بناء الامتدادات والبناء النهائي
       run: |
+        haxelib run lime rebuild extension-webm android
         lime build android -release
 
-    # الخطوة 7: رفع ملف APK الجاهز
-    - name: 7. Upload APK Artifact
+    # الخطوة 6: رفع ملف APK الجاهز
+    - name: 6. Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: FNF_IndieCross_Android_APK
