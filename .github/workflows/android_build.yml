@@ -89,25 +89,43 @@ jobs:
         
         # 6. إضافة Platform Tools إلى PATH
         echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+    
+    # ----------------------------------------------------
+    # خطوة جديدة وحاسمة: فرض المعمارية في ملف Project.xml
+    - name: 5.5 فرض معمارية ARM64 في Project.xml
+      run: |
+        # التأكد من وجود الملف ثم إضافة سطر التوجيه للمعالج
+        if [ -f Project.xml ]; then
+          echo "Found Project.xml. Appending HXCPP_ARM64 definition."
+          # إضافة السطر قبل نهاية وسم <haxedef>
+          sed -i '/<\/haxedef>/i <haxedef name="HXCPP_ARM64" />' Project.xml
+        else
+          echo "Project.xml not found. Skipping file modification."
+        fi
 
     # ----------------------------------------------------
-    # الخطوة 6: بناء ملف APK (الحل القاطع)
+    # الخطوة 6: بناء ملف APK 
     - name: 6. بناء Android Release APK
       run: |
-        # 1. حقن الإعدادات لضمان تعرف Lime على المسارات
+        # 1. حقن الإعدادات
         haxelib run lime config ANDROID_SDK $ANDROID_SDK_ROOT
         haxelib run lime config ANDROID_NDK_ROOT $NDK_ROOT
         haxelib run lime config JAVA_HOME $JAVA_HOME
         haxelib run lime config ANDROID_SETUP true
         
-        # 2. تشغيل الإعدادات للتأكيد
+        # 2. تشغيل الإعدادات
         haxelib run lime setup android
         
-        # 3. فرض المعمارية كمتغير بيئي (الحل القاطع لخطأ 'Please set one of the architectures')
-        echo "HXCPP_ARM64=1" >> $GITHUB_ENV
-
-        # 4. إعادة بناء الامتدادات
+        # 3. إعادة بناء الامتدادات
         haxelib run lime rebuild extension-webm android 
         
-        # 5. البناء النهائي (بدون تحديد المعمارية في سطر البناء لأنه تم تعريفها في البيئة)
+        # 4. البناء النهائي (تم حل مشكلة المعمارية في الخطوة 5.5)
         lime build android -release -D mobile 
+        
+    # الخطوة 7: رفع ملف APK الجاهز
+    - name: 7. Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: FNF_IndieCross_Android_APK
+        path: export/android/bin/release/app-release.apk 
+        retention-days: 7
