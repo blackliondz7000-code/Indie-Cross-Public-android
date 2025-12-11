@@ -19,7 +19,7 @@ jobs:
         haxe-version: 4.1.5 
         
     # ----------------------------------------------------
-    # تم تقسيم الخطوة 3.2 لمعرفة أي أمر هو سبب الفشل
+    # خطوة 3: تثبيت المكتبات (تم إزالة الأمر الخاطئ)
     - name: 3.1 تثبيت Lime 7.9.0
       run: haxelib install lime 7.9.0 
 
@@ -36,7 +36,7 @@ jobs:
       run: haxelib run lime setup
     # ----------------------------------------------------
     
-    - name: 3.3 تثبيت مكتبات FNF الإضافية
+    - name: 3.3 تثبيت مكتبات FNF الإضافية (تم حذف الأمر الفاشل)
       run: |
         haxelib install flixel-tools
         haxelib install flixel-addons
@@ -44,8 +44,7 @@ jobs:
         haxelib install hscript
         haxelib install newgrounds
         haxelib install linc_luajit
-        haxelib install actuate
-        haxelib run lime update # تحديث المشروع بناءً على Project.xml
+        haxelib install actuate 
 
     - name: 3.4 تثبيت مكتبات Git الخاصة (Fax/Polymod/Discord)
       run: |
