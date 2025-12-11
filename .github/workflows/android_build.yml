@@ -19,7 +19,7 @@ jobs:
         haxe-version: 4.1.5 
         
     # ----------------------------------------------------
-    # خطوة 3: تثبيت المكتبات (تم حل جميع المشاكل السابقة هنا)
+    # خطوة 3: تثبيت المكتبات 
     - name: 3.1 تثبيت Lime 7.9.0
       run: haxelib install lime 7.9.0 
 
@@ -45,9 +45,10 @@ jobs:
         haxelib install linc_luajit
         haxelib install actuate 
 
-    - name: 3.4 تثبيت مكتبات Git الخاصة (Fax/Polymod/Discord)
+    - name: 3.4 تثبيت مكتبات Git الخاصة (Fax/Polymod/Discord) - تم تصحيح رابط Faxe
       run: |
-        haxelib git faxe https://github.com/uhrobots/faxelib 
+        # تم تغيير faxelib إلى faxe
+        haxelib git faxe https://github.com/uhrobots/faxe 
         haxelib git polymod https://github.com/larsiusprime/polymod.git
         haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
 
@@ -62,7 +63,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: 5. تثبيت Android SDK و NDK (يدوي) - تم تحديثه لمعالجة خطأ 'sdkmanager'
+    - name: 5. تثبيت Android SDK و NDK (يدوي)
       run: |
         # 1. تعريف مسار Android SDK
         ANDROID_SDK_ROOT=$HOME/android_sdk
