@@ -7,11 +7,10 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
     
-    # تحديد مسار NDK ليتمكن Haxe/Lime من العثور عليه
+    # تحديد المتغيرات البيئية لـ Android Build
     env:
-      ANDROID_NDK_VERSION: r21e
-      # إعداد متغيرات بيئة إضافية قد يحتاجها Lime
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk 
+      ANDROID_NDK_VERSION: 21.4.7075529 # إصدار NDK معروف بالعمل مع HaxeFlixel
+      ANDROID_SDK_VERSION: 34
 
     steps:
     - name: 1. جلب الكود (Check out)
@@ -47,27 +46,35 @@ jobs:
         haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
         haxelib git extension-webm https://github.com/KadeDev/extension-webm
         
-        # تثبيت المكتبات الأخرى في ملف المشروع
         haxelib run lime update
 
     # ----------------------------------------------------
-    # الإصلاح الأخير: استخدام أداة تهيئة Android موثوقة
-    - name: 4. تثبيت Android NDK/SDK
-      uses: android-ndk/setup-android@v1
+    # الإصلاح النهائي: استخدام أداة تهيئة Java/Android القياسية
+    - name: 4. تثبيت Java JDK (JDK 17)
+      uses: actions/setup-java@v4
       with:
-          ndk-version: r21e
-          
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: 5. تهيئة Android SDK و NDK (الطريقة اليدوية الموثوقة)
+      # هذه الأداة تثبت Android SDK وتقوم بإعداد متغيرات البيئة
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: ${{ env.ANDROID_SDK_VERSION }}
+        ndk: ${{ env.ANDROID_NDK_VERSION }}
+        # قبول التراخيص لتجنب التوقف
+        force-static-libs: true
+        emulator: false 
+
     # ----------------------------------------------------
-    # الخطوة 5: إعادة بناء الامتدادات وبدء البناء
-    - name: 5. إعادة بناء الامتدادات والبناء النهائي
+    # الخطوة 6: بناء ملف APK
+    - name: 6. إعادة بناء الامتدادات والبناء النهائي
       run: |
-        # هذا الأمر ضروري لإعداد الامتداد للعمل مع Android
         haxelib run lime rebuild extension-webm android
-        # أمر البناء الفعلي
         lime build android -release
 
-    # الخطوة 6: رفع ملف APK الجاهز
-    - name: 6. Upload APK Artifact
+    # الخطوة 7: رفع ملف APK الجاهز
+    - name: 7. Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: FNF_IndieCross_Android_APK
