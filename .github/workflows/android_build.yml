@@ -19,18 +19,23 @@ jobs:
         haxe-version: 4.1.5 
         
     # ----------------------------------------------------
-    # الخطوة 3 المقسمة: لمعرفة المكتبة الفاشلة بدقة
+    # تم تقسيم الخطوة 3.2 لمعرفة أي أمر هو سبب الفشل
     - name: 3.1 تثبيت Lime 7.9.0
       run: haxelib install lime 7.9.0 
 
-    - name: 3.2 تثبيت المكتبات الأساسية (OpenFL/Flixel)
-      run: |
-        haxelib install openfl
-        haxelib install flixel
-        haxelib run lime setup flixel
-        haxelib run lime setup
-        haxelib run lime update # لتحديث المشروع بناءً على Project.xml
+    - name: 3.2.1 تثبيت OpenFL
+      run: haxelib install openfl
 
+    - name: 3.2.2 تثبيت Flixel
+      run: haxelib install flixel
+
+    - name: 3.2.3 إعداد Flixel (Setup)
+      run: haxelib run lime setup flixel
+
+    - name: 3.2.4 إعداد Lime النهائي
+      run: haxelib run lime setup
+    # ----------------------------------------------------
+    
     - name: 3.3 تثبيت مكتبات FNF الإضافية
       run: |
         haxelib install flixel-tools
@@ -40,6 +45,7 @@ jobs:
         haxelib install newgrounds
         haxelib install linc_luajit
         haxelib install actuate
+        haxelib run lime update # تحديث المشروع بناءً على Project.xml
 
     - name: 3.4 تثبيت مكتبات Git الخاصة (Fax/Polymod/Discord)
       run: |
