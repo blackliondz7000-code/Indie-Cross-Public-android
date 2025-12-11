@@ -69,7 +69,7 @@ jobs:
         echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
         mkdir -p $ANDROID_SDK_ROOT
         
-        # 2. تنزيل أدوات سطر الأوامر (Command Line Tools)
+        # 2. تنزيل أدوات سطر الأوامر
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
         unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
@@ -82,8 +82,7 @@ jobs:
         yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
         $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34"
 
-        # 5. تثبيت NDK R21e (هنا كان الخطأ وتم تصحيحه)
-        # تمت إضافة -x86_64 إلى اسم الملف ليصبح صحيحاً
+        # 5. تثبيت NDK R21e
         wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
         unzip android-ndk-r21e-linux-x86_64.zip -d $HOME
         echo "NDK_ROOT=$HOME/android-ndk-r21e" >> $GITHUB_ENV
@@ -92,11 +91,20 @@ jobs:
         echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
     # ----------------------------------------------------
-    # الخطوة 6: بناء ملف APK
+    # الخطوة 6: بناء ملف APK (تمت إضافة أوامر الربط هنا)
     - name: 6. بناء Android Release APK
       run: |
+        # أولاً: إخبار Lime بمكان الأدوات التي ثبتناها (هذا هو الإصلاح)
+        haxelib run lime config ANDROID_SDK $ANDROID_SDK_ROOT
+        haxelib run lime config ANDROID_NDK_ROOT $NDK_ROOT
+        haxelib run lime config JAVA_HOME $JAVA_HOME
+        haxelib run lime config ANDROID_SETUP true
+        
+        # ثانياً: إعادة بناء الامتدادات
         haxelib run lime rebuild extension-webm android 
-        lime build android -release
+        
+        # ثالثاً: البناء النهائي
+        haxelib run lime build android -release
 
     # الخطوة 7: رفع ملف APK الجاهز
     - name: 7. Upload APK Artifact
@@ -105,3 +113,4 @@ jobs:
         name: FNF_IndieCross_Android_APK
         path: export/android/bin/release/app-release.apk 
         retention-days: 7
+
