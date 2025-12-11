@@ -62,7 +62,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: 5. تثبيت Android SDK و NDK (تم تصحيح الرابط)
+    - name: 5. تثبيت Android SDK و NDK 
       run: |
         # 1. تعريف مسار Android SDK
         ANDROID_SDK_ROOT=$HOME/android_sdk
@@ -91,10 +91,10 @@ jobs:
         echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
     # ----------------------------------------------------
-    # الخطوة 6: بناء ملف APK (تم إضافة تحديد المعالج هنا)
+    # الخطوة 6: بناء ملف APK (الحل النهائي هنا)
     - name: 6. بناء Android Release APK
       run: |
-        # تهيئة الإعدادات
+        # تهيئة الإعدادات (تعريف المسارات)
         haxelib run lime config ANDROID_SDK $ANDROID_SDK_ROOT
         haxelib run lime config ANDROID_NDK_ROOT $NDK_ROOT
         haxelib run lime config JAVA_HOME $JAVA_HOME
@@ -103,8 +103,9 @@ jobs:
         # إعادة بناء الامتدادات
         haxelib run lime rebuild extension-webm android 
         
-        # البناء النهائي مع تحديد معمارية المعالج (هذا هو الحل)
-        haxelib run lime build android -release -D HXCPP_ARM64
+        # البناء النهائي مع تحديد معمارية المعالج (الحل لـ 'Please set one of the architectures') 
+        # وتمت إضافة -D mobile لحل مشكلة 'sys.io.Process' إذا ظهرت لاحقاً
+        haxelib run lime build android -release -D HXCPP_ARM64 -D mobile
 
     # الخطوة 7: رفع ملف APK الجاهز
     - name: 7. Upload APK Artifact
