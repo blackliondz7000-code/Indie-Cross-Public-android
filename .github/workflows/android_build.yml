@@ -91,22 +91,24 @@ jobs:
         echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
     # ----------------------------------------------------
-    # الخطوة 6: بناء ملف APK (الحل الشامل)
+    # الخطوة 6: بناء ملف APK (الحل القاطع والنهائي)
     - name: 6. بناء Android Release APK
       run: |
-        # 1. إعداد Lime بالكامل (يحل مشكلة "You need to run lime setup android")
-        haxelib run lime setup android
-        
-        # 2. التأكد من أن Lime يستخدم المسارات الصحيحة
+        # 1. حقن الإعدادات لضمان تعرف Lime على المسارات
         haxelib run lime config ANDROID_SDK $ANDROID_SDK_ROOT
         haxelib run lime config ANDROID_NDK_ROOT $NDK_ROOT
+        haxelib run lime config JAVA_HOME $JAVA_HOME
+        haxelib run lime config ANDROID_SETUP true
+        
+        # 2. تشغيل الإعدادات (لن يطلب إدخال الآن لأننا حقنا المسارات)
+        haxelib run lime setup android
         
         # 3. إعادة بناء الامتدادات
         haxelib run lime rebuild extension-webm android 
         
         # 4. البناء النهائي (يحل مشكلة المعمارية ومشكلة sys.io.Process)
         lime build android -release -D mobile -D HXCPP_ARM64
-
+        
     # الخطوة 7: رفع ملف APK الجاهز
     - name: 7. Upload APK Artifact
       uses: actions/upload-artifact@v4
