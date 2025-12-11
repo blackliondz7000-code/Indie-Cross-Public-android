@@ -1,0 +1,51 @@
+name: FNF Indie Cross - Android Build
+
+# السماح بتشغيل هذه العملية يدوياً من واجهة GitHub
+on:
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest # البيئة التي سيعمل عليها عامل البناء
+
+    steps:
+    - name: 1. جلب الكود (Check out)
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: 2. تهيئة Haxe وتثبيت الحزم (Setup Haxe)
+      uses: krdlab/setup-haxe@v1
+      with:
+        haxe-version: 4.2.5 
+        
+    - name: 3. تثبيت مكتبات المشروع (Install Dependencies)
+      run: |
+        haxelib install lime
+        haxelib install openfl
+        haxelib install flixel
+        haxelib run lime setup flixel
+        haxelib run lime update
+
+    - name: 4. تهيئة بيئة Java و Android (Setup Android Tools)
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17' 
+
+    - name: 5. تهيئة Android SDK/NDK
+      uses: nttld/setup-android@v3
+      with:
+        android-version: 34
+        ndk-version: 25.1.8937393
+
+    - name: 6. بناء ملف APK (Build APK)
+      run: |
+        lime build android -release
+
+    - name: 7. رفع ملف APK الجاهز (Upload Artifact)
+      uses: actions/upload-artifact@v4
+      with:
+        name: FNF_IndieCross_Android_APK
+        path: export/android/bin/release/app-release.apk 
+        retention-days: 7
