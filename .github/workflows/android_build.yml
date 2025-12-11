@@ -17,16 +17,22 @@ jobs:
       uses: krdlab/setup-haxe@v1
       with:
         haxe-version: 4.1.5 
-        # تم حذف سطر neko-version لأنه يسبب الفشل
         
-    - name: 3. تثبيت مكتبات Haxelib
+    # ----------------------------------------------------
+    # الخطوة 3 المقسمة: لمعرفة المكتبة الفاشلة بدقة
+    - name: 3.1 تثبيت Lime 7.9.0
+      run: haxelib install lime 7.9.0 
+
+    - name: 3.2 تثبيت المكتبات الأساسية (OpenFL/Flixel)
       run: |
-        # تثبيت المكتبات الأساسية
-        haxelib install lime 7.9.0 
         haxelib install openfl
         haxelib install flixel
         haxelib run lime setup flixel
-        haxelib run lime setup 
+        haxelib run lime setup
+        haxelib run lime update # لتحديث المشروع بناءً على Project.xml
+
+    - name: 3.3 تثبيت مكتبات FNF الإضافية
+      run: |
         haxelib install flixel-tools
         haxelib install flixel-addons
         haxelib install flixel-ui
@@ -35,13 +41,14 @@ jobs:
         haxelib install linc_luajit
         haxelib install actuate
 
-        # تثبيت المكتبات الخاصة من GitHub
+    - name: 3.4 تثبيت مكتبات Git الخاصة (Fax/Polymod/Discord)
+      run: |
         haxelib git faxe https://github.com/uhrobots/faxe
         haxelib git polymod https://github.com/larsiusprime/polymod.git
         haxelib git discord_rpc https://github.com/Aidan63/linc_discord-rpc
-        haxelib git extension-webm https://github.com/KadeDev/extension-webm
-        
-        haxelib run lime update
+
+    - name: 3.5 تثبيت extension-webm 
+      run: haxelib git extension-webm https://github.com/KadeDev/extension-webm
 
     # ----------------------------------------------------
     # تثبيت Android SDK/NDK
@@ -53,20 +60,16 @@ jobs:
         
     - name: 5. تثبيت Android SDK و NDK (يدوي)
       run: |
-        # تثبيت مكونات Android SDK (مثل أدوات البناء)
         sdkmanager "platform-tools" "platforms;android-34"
-        
-        # تثبيت NDK R21e (الإصدار المحدد المطلوب لـ HaxeFlixel)
         wget https://dl.google.com/android/repository/android-ndk-r21e-linux.zip
         unzip android-ndk-r21e-linux.zip -d $HOME
-        # تعيين مسار NDK ليتمكن Lime من العثور عليه
         echo "NDK_ROOT=$HOME/android-ndk-r21e" >> $GITHUB_ENV
 
     # ----------------------------------------------------
     # الخطوة 6: بناء ملف APK
     - name: 6. بناء Android Release APK
       run: |
-        haxelib run lime rebuild extension-webm android
+        haxelib run lime rebuild extension-webm android 
         lime build android -release
 
     # الخطوة 7: رفع ملف APK الجاهز
