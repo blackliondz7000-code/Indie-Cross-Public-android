@@ -64,58 +64,45 @@ jobs:
         
     - name: 5. تثبيت Android SDK و NDK 
       run: |
-        # 1. تعريف مسار Android SDK
         ANDROID_SDK_ROOT=$HOME/android_sdk
         echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
         mkdir -p $ANDROID_SDK_ROOT
         
-        # 2. تنزيل أدوات سطر الأوامر
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
         unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
         mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools/* $ANDROID_SDK_ROOT/cmdline-tools/latest/
         
-        # 3. إضافة sdkmanager إلى PATH
         echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
-        # 4. قبول التراخيص وتثبيت الأدوات
         yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
         $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34"
 
-        # 5. تثبيت NDK R21e
         wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
         unzip android-ndk-r21e-linux-x86_64.zip -d $HOME
         echo "NDK_ROOT=$HOME/android-ndk-r21e" >> $GITHUB_ENV
         
-        # 6. إضافة Platform Tools إلى PATH
         echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
     # ----------------------------------------------------
-    # الخطوة 6: بناء ملف APK (الحل الإجباري باستخدام Export)
+    # الخطوة 6: الحل النهائي (تصحيح الترتيب)
     - name: 6. بناء Android Release APK
       run: |
-        # 1. إعداد المسارات
+        # 1. فرض المعمارية كأول خطوة (قبل أي أمر بناء) !!
+        export HXCPP_ARM64=1
+        
+        # 2. إعداد المسارات
         haxelib run lime config ANDROID_SDK $ANDROID_SDK_ROOT
         haxelib run lime config ANDROID_NDK_ROOT $NDK_ROOT
         haxelib run lime config JAVA_HOME $JAVA_HOME
         haxelib run lime config ANDROID_SETUP true
-        
-        # 2. تشغيل الإعدادات
         haxelib run lime setup android
 
-        # 3. إعادة بناء الامتدادات
-        haxelib run lime rebuild extension-webm android
+        # 3. إعادة بناء الامتدادات (الآن سيعمل لأنه يعرف المعمارية + أضفنا العلم يدوياً)
+        haxelib run lime rebuild extension-webm android -D HXCPP_ARM64
         
-        # ---------------------------------------------
-        # الحل القاطع: فرض متغيرات البيئة قبل البناء
-        # ---------------------------------------------
-        export HXCPP_ARM64=1
-        export HXCPP_ARMV7=1
-        
-        echo "Building with forced Architecture variables..."
-        
-        # البناء النهائي
-        haxelib run lime build android -release
+        # 4. البناء النهائي
+        haxelib run lime build android -release -D mobile -D HXCPP_ARM64
         
     # الخطوة 7: رفع ملف APK الجاهز
     - name: 7. Upload APK Artifact
