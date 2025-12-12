@@ -89,25 +89,12 @@ jobs:
         
         # 6. إضافة Platform Tools إلى PATH
         echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
-    
-    # ----------------------------------------------------
-    # خطوة جديدة وحاسمة: فرض المعمارية في ملف Project.xml
-    - name: 5.5 فرض معمارية ARM64 في Project.xml
-      run: |
-        # التأكد من وجود الملف ثم إضافة سطر التوجيه للمعالج
-        if [ -f Project.xml ]; then
-          echo "Found Project.xml. Appending HXCPP_ARM64 definition."
-          # إضافة السطر قبل نهاية وسم <haxedef>
-          sed -i '/<\/haxedef>/i <haxedef name="HXCPP_ARM64" />' Project.xml
-        else
-          echo "Project.xml not found. Skipping file modification."
-        fi
 
     # ----------------------------------------------------
-    # الخطوة 6: بناء ملف APK 
+    # الخطوة 6: بناء ملف APK (الحل الإجباري باستخدام Export)
     - name: 6. بناء Android Release APK
       run: |
-        # 1. حقن الإعدادات
+        # 1. إعداد المسارات
         haxelib run lime config ANDROID_SDK $ANDROID_SDK_ROOT
         haxelib run lime config ANDROID_NDK_ROOT $NDK_ROOT
         haxelib run lime config JAVA_HOME $JAVA_HOME
@@ -115,12 +102,20 @@ jobs:
         
         # 2. تشغيل الإعدادات
         haxelib run lime setup android
-        
+
         # 3. إعادة بناء الامتدادات
-        haxelib run lime rebuild extension-webm android 
+        haxelib run lime rebuild extension-webm android
         
-        # 4. البناء النهائي (تم حل مشكلة المعمارية في الخطوة 5.5)
-        lime build android -release -D mobile 
+        # ---------------------------------------------
+        # الحل القاطع: فرض متغيرات البيئة قبل البناء
+        # ---------------------------------------------
+        export HXCPP_ARM64=1
+        export HXCPP_ARMV7=1
+        
+        echo "Building with forced Architecture variables..."
+        
+        # البناء النهائي
+        haxelib run lime build android -release
         
     # الخطوة 7: رفع ملف APK الجاهز
     - name: 7. Upload APK Artifact
