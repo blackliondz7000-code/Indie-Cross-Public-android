@@ -91,27 +91,24 @@ jobs:
         # 1. تحديد المسار الثابت للمكتبة المثبتة
         WEBMLIB_PATH="$HOME/.haxelib/extension-webm"
 
-        # 2. البحث عن رقم إصدار المكتبة (هذا يضمن العثور على المسار الصحيح)
-        VERSION=$(ls "$WEBMLIB_PATH" | grep -v haxelib.json | head -n 1)
-        
-        # 3. تعديل الملف في المسار النهائي
-        FILE_PATH="$WEBMLIB_PATH/$VERSION/libwebm/mkvmuxerutil.cpp"
-        
-        if [ -f "$FILE_PATH" ]; then
-          echo "Patching $FILE_PATH to include unistd.h..."
-          # إضافة include <unistd.h> في بداية الملف (السطر 2)
-          sed -i '2i#include <unistd.h>' "$FILE_PATH"
-          echo "Patching complete."
+        # 2. البحث عن رقم إصدار المكتبة لضمان العثور على المسار الصحيح
+        if [ -d "$WEBMLIB_PATH" ]; then
+            VERSION=$(ls "$WEBMLIB_PATH" | grep -v haxelib.json | head -n 1)
+            
+            # 3. تحديد ملف الكود المصدري بدقة
+            FILE_PATH="$WEBMLIB_PATH/$VERSION/libwebm/mkvmuxerutil.cpp"
+            
+            if [ -f "$FILE_PATH" ]; then
+              echo "Found file at: $FILE_PATH"
+              echo "Patching to include unistd.h..."
+              # إضافة include <unistd.h> في بداية الملف (السطر 2)
+              sed -i '2i#include <unistd.h>' "$FILE_PATH"
+              echo "Patching complete."
+            else
+              echo "Error: File mkvmuxerutil.cpp not found inside version folder ($VERSION)."
+            fi
         else
-          echo "FATAL: mkvmuxerutil.cpp not found at expected path. Attempting wider search..."
-          # محاولة البحث عن الملف في أي مكان آخر
-          FALLBACK_PATH=$(find $HOME/.haxelib -name mkvmuxerutil.cpp | head -n 1)
-          if [ -f "$FALLBACK_PATH" ]; then
-             echo "Patching Fallback path: $FALLBACK_PATH"
-             sed -i '2i#include <unistd.h>' "$FALLBACK_PATH"
-          else
-             echo "CRITICAL ERROR: mkvmuxerutil.cpp not found anywhere. Build will fail."
-          fi
+            echo "Error: extension-webm folder not found at $WEBMLIB_PATH"
         fi
 
     # ----------------------------------------------------
